@@ -242,6 +242,7 @@
   td.num { font-variant-numeric: tabular-nums; font-weight: 500; color: var(--text); }
   tr.highlight td { background: var(--accent-bg); }
   tr.highlight td.num { color: var(--accent); font-weight: 600; }
+  tr.bold-row td.num { font-weight: 600; color: var(--text); }
 
   /* Warning banner */
   .warn-banner {
@@ -408,6 +409,10 @@
           </tr>
         </thead>
         <tbody>
+          <tr id="row-risk" class="bold-row">
+            <td>Risk amount</td>
+            <td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
+          </tr>
           <tr id="row-shares" class="highlight">
             <td>No. of shares</td>
             <td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
@@ -430,8 +435,9 @@
     <div class="formulas">
       <b>Risk per share</b> = Entry − Stop loss<br>
       <b>Risk on investment</b> = (Entry − SL) ÷ Entry + 2 × brokerage%<br>
-      <b>No. of shares</b> = floor(Net worth × Risk% ÷ Risk per share)<br>
-      <b>Investment</b> = Net worth × Risk% ÷ Risk on investment<br>
+      <b>Risk amount</b> = Net worth × Risk%<br>
+      <b>No. of shares</b> = floor(Risk amount ÷ Risk per share)<br>
+      <b>Investment</b> = Risk amount ÷ Risk on investment<br>
       <b>Allocation %</b> = Investment ÷ Net worth × 100<br>
       <b>Max SL price</b> = Entry − (Entry × Max SL%)
     </div>
@@ -551,6 +557,7 @@
       }
     }
 
+    const riskCells   = $('row-risk').querySelectorAll('td.num');
     const sharesCells = $('row-shares').querySelectorAll('td.num');
     const investCells = $('row-invest').querySelectorAll('td.num');
     const allocCells  = $('row-alloc').querySelectorAll('td.num');
@@ -560,6 +567,7 @@
       const shares = Math.floor(riskAmount / rps);
       const investment = riskAmount / roi;
       const alloc = (investment / net) * 100;
+      riskCells[i].textContent   = money(riskAmount);
       sharesCells[i].textContent = fmt.format(shares);
       investCells[i].textContent = money(investment);
       allocCells[i].textContent  = alloc.toFixed(2) + '%';
