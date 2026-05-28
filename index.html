@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position Size Calculator</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-2: #f1efe8;
+    --border: rgba(0, 0, 0, 0.12);
+    --border-strong: rgba(0, 0, 0, 0.2);
+    --text: #1a1a1a;
+    --text-2: #5a5a55;
+    --text-3: #8a8a85;
+    --accent: #185fa5;
+    --accent-bg: #e6f1fb;
+    --danger: #a32d2d;
+    --danger-bg: #fcebeb;
+    --success: #3b6d11;
+    --success-bg: #eaf3de;
+    --warn: #854f0b;
+    --warn-bg: #faeeda;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --surface: #262625;
+      --surface-2: #2f2f2e;
+      --border: rgba(255, 255, 255, 0.1);
+      --border-strong: rgba(255, 255, 255, 0.2);
+      --text: #f5f5f3;
+      --text-2: #b4b2a9;
+      --text-3: #888780;
+      --accent: #85b7eb;
+      --accent-bg: rgba(133, 183, 235, 0.15);
+      --danger: #f09595;
+      --danger-bg: rgba(240, 149, 149, 0.15);
+      --success: #97c459;
+      --success-bg: rgba(151, 196, 89, 0.15);
+      --warn: #ef9f27;
+      --warn-bg: rgba(239, 159, 39, 0.15);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+    }
+  }
+  [data-theme="light"] {
+    --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f1efe8;
+    --border: rgba(0,0,0,0.12); --border-strong: rgba(0,0,0,0.2);
+    --text: #1a1a1a; --text-2: #5a5a55; --text-3: #8a8a85;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --danger: #a32d2d; --danger-bg: #fcebeb;
+    --success: #3b6d11; --success-bg: #eaf3de;
+    --warn: #854f0b; --warn-bg: #faeeda;
+  }
+  [data-theme="dark"] {
+    --bg: #1a1a1a; --surface: #262625; --surface-2: #2f2f2e;
+    --border: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.2);
+    --text: #f5f5f3; --text-2: #b4b2a9; --text-3: #888780;
+    --accent: #85b7eb; --accent-bg: rgba(133,183,235,0.15);
+    --danger: #f09595; --danger-bg: rgba(240,149,149,0.15);
+    --success: #97c459; --success-bg: rgba(151,196,89,0.15);
+    --warn: #ef9f27; --warn-bg: rgba(239,159,39,0.15);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .subtitle { font-size: 13px; color: var(--text-2); margin: 4px 0 0; }
+
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* Segmented control */
+  .seg {
+    display: inline-flex;
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 3px;
+    border: 0.5px solid var(--border);
+  }
+  .seg button {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+  }
+  .seg button.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+  .seg button:hover:not(.active) { color: var(--text); }
+
+  .icon-btn {
+    width: 36px; height: 36px;
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-2);
+    font-size: 16px;
+    transition: background 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Inputs grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .field .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .field .prefix, .field .suffix {
+    position: absolute;
+    color: var(--text-3);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .field .prefix { left: 12px; }
+  .field .suffix { right: 12px; }
+  .field input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field.has-prefix input { padding-left: 28px; }
+  .field.has-suffix input { padding-right: 28px; }
+  .field input:hover { border-color: var(--border-strong); }
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  /* Hide number spinners for cleaner look */
+  .field input[type=number]::-webkit-inner-spin-button,
+  .field input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .field input[type=number] { -moz-appearance: textfield; }
+
+  /* Summary metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .metric {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+  }
+  .metric .lbl { font-size: 12px; color: var(--text-2); margin-bottom: 4px; font-weight: 500; }
+  .metric .val { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .metric .hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+  .metric.accent { background: var(--accent-bg); border-color: transparent; }
+  .metric.accent .val { color: var(--accent); }
+  .metric.warn { background: var(--warn-bg); border-color: transparent; }
+  .metric.warn .val { color: var(--warn); }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td {
+    padding: 12px 14px;
+    text-align: center;
+    border-top: 0.5px solid var(--border);
+  }
+  thead th { border-top: none; background: var(--surface-2); font-weight: 500; color: var(--text-2); font-size: 13px; }
+  tbody tr:first-child td { border-top: none; }
+  th:first-child, td:first-child { text-align: left; color: var(--text-2); }
+  td.num { font-variant-numeric: tabular-nums; font-weight: 500; color: var(--text); }
+  tr.highlight td { background: var(--accent-bg); }
+  tr.highlight td.num { color: var(--accent); font-weight: 600; }
+
+  /* Warning banner */
+  .warn-banner {
+    background: var(--danger-bg);
+    color: var(--danger);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .warn-banner.show { display: block; }
+
+  .info-banner {
+    background: var(--warn-bg);
+    color: var(--warn);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .info-banner.show { display: block; }
+
+  .footnote {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 18px;
+    line-height: 1.6;
+  }
+  .footnote code {
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  details {
+    margin-top: 12px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0;
+    background: var(--surface);
+  }
+  details summary {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-2);
+    font-weight: 500;
+    user-select: none;
+  }
+  details[open] summary { border-bottom: 0.5px solid var(--border); }
+  details .formulas {
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-2);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  details .formulas b { color: var(--text); font-weight: 500; }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 16px 14px 40px; }
+    h1 { font-size: 19px; }
+    .metric .val { font-size: 19px; }
+    th, td { padding: 10px 8px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Position size calculator</h1>
+      <p class="subtitle">Risk-based share quantity for India 🇮🇳 and US 🇺🇸 markets</p>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="tablist" aria-label="Market region">
+        <button id="btn-in" class="active" type="button">India (₹)</button>
+        <button id="btn-us" type="button">US ($)</button>
+      </div>
+      <button id="btn-theme" class="icon-btn" type="button" aria-label="Toggle theme" title="Toggle theme">◐</button>
+    </div>
+  </header>
+
+  <div id="warn" class="warn-banner" role="alert"></div>
+  <div id="info" class="info-banner" role="status"></div>
+
+  <!-- Inputs -->
+  <section class="card">
+    <h2>Inputs</h2>
+    <div class="grid">
+      <div class="field has-prefix">
+        <label for="net">Net worth</label>
+        <div class="input-wrap">
+          <span class="prefix" id="cur1">₹</span>
+          <input id="net" type="number" step="1000" min="0">
+        </div>
+      </div>
+      <div class="field has-prefix">
+        <label for="entry">Entry price</label>
+        <div class="input-wrap">
+          <span class="prefix" id="cur2">₹</span>
+          <input id="entry" type="number" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="field has-prefix">
+        <label for="stop">Stop loss</label>
+        <div class="input-wrap">
+          <span class="prefix" id="cur3">₹</span>
+          <input id="stop" type="number" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="field has-suffix">
+        <label for="brok">Brokerage</label>
+        <div class="input-wrap">
+          <input id="brok" type="number" step="0.01" min="0">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+      <div class="field has-suffix">
+        <label for="maxsl">Max stop loss</label>
+        <div class="input-wrap">
+          <input id="maxsl" type="number" step="0.5" min="0">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <div class="metrics">
+    <div class="metric accent">
+      <div class="lbl">Risk on investment</div>
+      <div class="val" id="roi">—</div>
+      <div class="hint">(Entry − SL) ÷ Entry + 2 × brokerage</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">Risk per share</div>
+      <div class="val" id="rps">—</div>
+      <div class="hint">Entry − Stop loss</div>
+    </div>
+    <div class="metric warn">
+      <div class="lbl">Max SL price</div>
+      <div class="val" id="maxslprice">—</div>
+      <div class="hint">Entry − (Entry × Max SL%)</div>
+    </div>
+  </div>
+
+  <!-- Risk table -->
+  <section class="card" style="padding: 4px;">
+    <div class="table-wrap" style="border: none;">
+      <table>
+        <thead>
+          <tr>
+            <th>Risk % of capital</th>
+            <th>0.10%</th>
+            <th>0.15%</th>
+            <th>0.25%</th>
+            <th>0.50%</th>
+            <th>1.00%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="row-shares" class="highlight">
+            <td>No. of shares</td>
+            <td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
+          </tr>
+          <tr id="row-invest">
+            <td>Investment</td>
+            <td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
+          </tr>
+          <tr id="row-alloc">
+            <td>Allocation (%)</td>
+            <td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <details>
+    <summary>Show formulas</summary>
+    <div class="formulas">
+      <b>Risk per share</b> = Entry − Stop loss<br>
+      <b>Risk on investment</b> = (Entry − SL) ÷ Entry + 2 × brokerage%<br>
+      <b>No. of shares</b> = floor(Net worth × Risk% ÷ Risk per share)<br>
+      <b>Investment</b> = Net worth × Risk% ÷ Risk on investment<br>
+      <b>Allocation %</b> = Investment ÷ Net worth × 100<br>
+      <b>Max SL price</b> = Entry − (Entry × Max SL%)
+    </div>
+  </details>
+
+  <p class="footnote">
+    Settings are saved locally in your browser. Built as a single HTML file — no server, no tracking.
+  </p>
+
+</div>
+
+<script>
+(function() {
+  const RISKS = [0.001, 0.0015, 0.0025, 0.005, 0.01];
+  const PRESETS = {
+    in: { currency: '₹', locale: 'en-IN', net: 600000, entry: 1430, stop: 1241, brok: 0.23, maxsl: 15 },
+    us: { currency: '$', locale: 'en-US', net: 20000,  entry: 1673, stop: 1614, brok: 0,    maxsl: 8  }
+  };
+
+  const $ = id => document.getElementById(id);
+  let region = 'in';
+  let fmt = new Intl.NumberFormat(PRESETS.in.locale);
+
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('posCalc') || '{}');
+      if (saved.region) region = saved.region;
+      const p = saved.values || PRESETS[region];
+      $('net').value = p.net;
+      $('entry').value = p.entry;
+      $('stop').value = p.stop;
+      $('brok').value = p.brok;
+      $('maxsl').value = p.maxsl;
+      const theme = saved.theme;
+      if (theme) document.documentElement.setAttribute('data-theme', theme);
+    } catch(e) {
+      applyPreset(region);
+    }
+    updateRegionUI();
+  }
+
+  function saveState() {
+    const values = {
+      net: parseFloat($('net').value) || 0,
+      entry: parseFloat($('entry').value) || 0,
+      stop: parseFloat($('stop').value) || 0,
+      brok: parseFloat($('brok').value) || 0,
+      maxsl: parseFloat($('maxsl').value) || 0
+    };
+    const theme = document.documentElement.getAttribute('data-theme') || '';
+    localStorage.setItem('posCalc', JSON.stringify({ region, values, theme }));
+  }
+
+  function applyPreset(r) {
+    const p = PRESETS[r];
+    $('net').value = p.net;
+    $('entry').value = p.entry;
+    $('stop').value = p.stop;
+    $('brok').value = p.brok;
+    $('maxsl').value = p.maxsl;
+  }
+
+  function updateRegionUI() {
+    const p = PRESETS[region];
+    fmt = new Intl.NumberFormat(p.locale);
+    ['cur1','cur2','cur3'].forEach(id => $(id).textContent = p.currency);
+    $('btn-in').classList.toggle('active', region === 'in');
+    $('btn-us').classList.toggle('active', region === 'us');
+  }
+
+  function money(n) {
+    if (!isFinite(n)) return '—';
+    return PRESETS[region].currency + fmt.format(Math.round(n));
+  }
+
+  function calc() {
+    const net   = parseFloat($('net').value)   || 0;
+    const entry = parseFloat($('entry').value) || 0;
+    const stop  = parseFloat($('stop').value)  || 0;
+    const brok  = (parseFloat($('brok').value) || 0) / 100;
+    const maxsl = (parseFloat($('maxsl').value) || 0) / 100;
+    const cur   = PRESETS[region].currency;
+
+    const warn = $('warn');
+    const info = $('info');
+    warn.classList.remove('show');
+    info.classList.remove('show');
+
+    if (net <= 0 || entry <= 0 || stop <= 0) {
+      warn.textContent = 'Enter positive values for net worth, entry and stop loss.';
+      warn.classList.add('show');
+      clearOutputs();
+      return;
+    }
+    if (stop >= entry) {
+      warn.textContent = 'Stop loss must be below entry price (long position).';
+      warn.classList.add('show');
+      clearOutputs();
+      return;
+    }
+
+    const rps = entry - stop;
+    const roi = (rps / entry) + 2 * brok;
+    const maxSlPrice = entry - (entry * maxsl);
+
+    $('rps').textContent = money(rps).replace(cur, cur);
+    // For risk per share, show 2 decimals
+    $('rps').textContent = cur + (rps).toFixed(2);
+    $('roi').textContent = (roi * 100).toFixed(2) + '%';
+    $('maxslprice').textContent = maxsl > 0 ? cur + maxSlPrice.toFixed(2) : '—';
+
+    // Info banner: stop loss vs max SL
+    if (maxsl > 0) {
+      if (stop < maxSlPrice) {
+        info.textContent = `Stop loss ${cur}${stop.toFixed(2)} is wider than your Max SL of ${maxsl*100}% (${cur}${maxSlPrice.toFixed(2)}). Consider tightening or skipping the trade.`;
+        info.classList.add('show');
+      }
+    }
+
+    const sharesCells = $('row-shares').querySelectorAll('td.num');
+    const investCells = $('row-invest').querySelectorAll('td.num');
+    const allocCells  = $('row-alloc').querySelectorAll('td.num');
+
+    RISKS.forEach((r, i) => {
+      const riskAmount = net * r;
+      const shares = Math.floor(riskAmount / rps);
+      const investment = riskAmount / roi;
+      const alloc = (investment / net) * 100;
+      sharesCells[i].textContent = fmt.format(shares);
+      investCells[i].textContent = money(investment);
+      allocCells[i].textContent  = alloc.toFixed(2) + '%';
+    });
+
+    saveState();
+  }
+
+  function clearOutputs() {
+    $('rps').textContent = '—';
+    $('roi').textContent = '—';
+    $('maxslprice').textContent = '—';
+    document.querySelectorAll('td.num').forEach(c => c.textContent = '');
+  }
+
+  // Region switching
+  $('btn-in').addEventListener('click', () => {
+    region = 'in';
+    applyPreset('in');
+    updateRegionUI();
+    calc();
+  });
+  $('btn-us').addEventListener('click', () => {
+    region = 'us';
+    applyPreset('us');
+    updateRegionUI();
+    calc();
+  });
+
+  // Theme toggle
+  $('btn-theme').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : (current === 'light' ? '' : 'dark');
+    if (next) document.documentElement.setAttribute('data-theme', next);
+    else document.documentElement.removeAttribute('data-theme');
+    saveState();
+  });
+
+  // Inputs
+  ['net','entry','stop','brok','maxsl'].forEach(id => {
+    $(id).addEventListener('input', calc);
+  });
+
+  loadState();
+  calc();
+})();
+</script>
+</body>
+</html>
