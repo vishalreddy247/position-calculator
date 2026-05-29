@@ -243,6 +243,52 @@
   tr.highlight td { background: var(--accent-bg); }
   tr.highlight td.num { color: var(--accent); font-weight: 600; }
   tr.bold-row td.num { font-weight: 600; color: var(--text); }
+  tr.hidden-row { display: none; }
+
+  /* Toggle switch */
+  .row-toggles {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px 4px;
+  }
+  .switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch-track {
+    width: 32px;
+    height: 18px;
+    background: var(--border);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--surface);
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+  }
+  .switch input:checked + .switch-track { background: var(--accent); }
+  .switch input:checked + .switch-track .switch-thumb { transform: translateX(14px); }
+  .switch:hover .switch-track { filter: brightness(1.1); }
+  .switch input:focus-visible + .switch-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
   /* Warning banner */
   .warn-banner {
@@ -396,6 +442,13 @@
 
   <!-- Risk table -->
   <section class="card" style="padding: 4px;">
+    <div class="row-toggles">
+      <label class="switch">
+        <input type="checkbox" id="toggle-risk" checked>
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+        <span class="switch-label">Show risk amount</span>
+      </label>
+    </div>
     <div class="table-wrap" style="border: none;">
       <table>
         <thead>
@@ -473,6 +526,10 @@
       $('maxsl').value = p.maxsl;
       const theme = saved.theme;
       if (theme) document.documentElement.setAttribute('data-theme', theme);
+      if (saved.showRisk === false) {
+        $('toggle-risk').checked = false;
+        $('row-risk').classList.add('hidden-row');
+      }
     } catch(e) {
       applyPreset(region);
     }
@@ -488,7 +545,8 @@
       maxsl: parseFloat($('maxsl').value) || 0
     };
     const theme = document.documentElement.getAttribute('data-theme') || '';
-    localStorage.setItem('posCalc', JSON.stringify({ region, values, theme }));
+    const showRisk = $('toggle-risk').checked;
+    localStorage.setItem('posCalc', JSON.stringify({ region, values, theme, showRisk }));
   }
 
   function applyPreset(r) {
@@ -609,6 +667,12 @@
   // Inputs
   ['net','entry','stop','brok','maxsl'].forEach(id => {
     $(id).addEventListener('input', calc);
+  });
+
+  // Risk amount row toggle
+  $('toggle-risk').addEventListener('change', (e) => {
+    $('row-risk').classList.toggle('hidden-row', !e.target.checked);
+    saveState();
   });
 
   loadState();
